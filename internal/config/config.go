@@ -2,6 +2,7 @@ package config
 
 import (
 	"sync/atomic"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -40,16 +41,28 @@ var (
 
 // Config is the api-demo configuration structure
 type Config struct {
-	AppName  string `mapstructure:"app_name"`
-	Env      string `mapstructure:"env"`
-	LogLevel string `mapstructure:"log_level"`
-	APIKey   string `mapstructure:"api_key"`
-	Server   server `mapstructure:"server"`
+	AppName  string  `mapstructure:"app_name"`
+	Env      string  `mapstructure:"env"`
+	LogLevel string  `mapstructure:"log_level"`
+	APIKey   string  `mapstructure:"api_key"`
+	Server   server  `mapstructure:"server"`
+	MongoDB  mongodb `mapstructure:"mongodb"`
 }
 
 // server is the server configuration structure for start the api-demo http service
 type server struct {
 	PublicPort string `mapstructure:"public_port"`
+}
+
+type mongodb struct {
+	Host            string        `mapstructure:"host"`
+	Username        string        `mapstructure:"username"`
+	Password        string        `mapstructure:"password"`
+	Timeout         time.Duration `mapstructure:"timeout"`
+	MaxConnIdleTime time.Duration `mapstructure:"max_conn_idle_time"`
+	MinPoolSize     uint64        `mapstructure:"min_pool_size"`
+	MaxPoolSize     uint64        `mapstructure:"max_pool_size"`
+	MaxConnecting   uint64        `mapstructure:"max_connecting"`
 }
 
 // GetPublicPort get the public port that api-demo service is listening at
