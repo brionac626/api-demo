@@ -25,5 +25,5 @@ func Execute() error {
 
 func init() {
 	rootCmd.Flags().StringVarP(&configPath, "config", "c", "./deployment/local/config.yaml", "configuration file path")
-	rootCmd.AddCommand(httpCmd)
+	rootCmd.AddCommand(apiCmd, boAPICmd)
 }
