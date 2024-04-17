@@ -3,7 +3,17 @@ env: local
 log_level: debug
 api_key: test-api-key
 server:
-  public_port: ":3000"
+  public_port: :3000
+mongodb:
+  host: localhost:27017
+  db: articles
+  username: local-user
+  password: local-user-password
+  timeout: 5s
+  max_conn_idle_time: 1m
+  min_pool_size: 0
+  max_pool_size: 20
+  max_connecting: 2
 # consul:
 #   host: "localhost"
 #   port: ":8080"
