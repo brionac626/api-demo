@@ -3,7 +3,7 @@ package http
 import "github.com/labstack/echo/v4"
 
 // NewServer return a new echo server for public service
-func NewServer() *echo.Echo {
+func NewServer(h ArticleHandler) *echo.Echo {
 	e := echo.New()
 
 	// TODO: add trace
@@ -11,10 +11,10 @@ func NewServer() *echo.Echo {
 	publicGroup := e.Group("/public")
 
 	// TODO: add articles handler
-	publicGroup.GET("/articles", getArticles)
-	publicGroup.POST("/articles", createArticles)
-	publicGroup.PUT("/articles/:id", modifyArticles)
-	publicGroup.DELETE("/articles/:id", deleteArticles)
+	publicGroup.GET("/articles", h.getArticles)
+	publicGroup.POST("/articles", h.createArticles)
+	publicGroup.PUT("/articles/:id", h.modifyArticles)
+	publicGroup.DELETE("/articles/:id", h.deleteArticles)
 
 	privateGroup := e.Group("/private")
 

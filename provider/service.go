@@ -2,14 +2,21 @@ package provider
 
 import (
 	"github.com/brionac626/api-demo/delivery/http"
+	"github.com/brionac626/api-demo/delivery/repository"
+	"github.com/brionac626/api-demo/domains"
 
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func ProvideServer() *echo.Echo {
-	return http.NewServer()
+func ProvideServer(h http.ArticleHandler) *echo.Echo {
+	return http.NewServer(h)
 }
 
 func ProvideBackOfficeServer() *echo.Echo {
 	return http.NewBackOfficeServer()
+}
+
+func ProvideArticleRepository(mc *mongo.Client) domains.ArticlesRepo {
+	return repository.NewArticleRepo(mc)
 }
