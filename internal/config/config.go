@@ -1,20 +1,30 @@
 package config
 
 import (
+	"log/slog"
+	"os"
+	"strconv"
 	"sync/atomic"
 	"time"
 
 	"github.com/spf13/viper"
 )
 
-// Set default values for the service global configuration
-func init() {
-	viper.SetDefault("app_name", "api-demo")
-	viper.SetDefault("env", "local")
-	viper.SetDefault("log_level", "debug")
-	viper.SetDefault("api_key", "default-api-key")
-	viper.SetDefault("server", server{PublicPort: ":3000"})
-}
+const (
+	// EnvUnitTest is an environment variable for internal unit test
+	EnvUnitTest = "UNIT_TEST"
+
+	_serviceName            = "api-demo"
+	_serviceLogLevel        = "debug"
+	_serviceAPIKey          = "default-api-key"
+	_servicePublicPort      = ":3000"
+	_mongodbDB              = "articles"
+	_mongodbTimeout         = 5 * time.Second
+	_mongodbMaxConnIdleTime = 1 * time.Minute
+	_mongodbMinPoolSize     = 0
+	_mongodbMaxPoolSize     = 20
+	_mongodbMaxConnecting   = 2
+)
 
 var (
 	// global configuration
@@ -39,6 +49,26 @@ var (
 	}
 )
 
+// Set default values for the service global configuration
+func init() {
+	viper.SetDefault("app_name", _serviceName)
+	viper.SetDefault("env", "local")
+	viper.SetDefault("log_level", _serviceLogLevel)
+	viper.SetDefault("api_key", _serviceAPIKey)
+	viper.SetDefault("server", server{PublicPort: _servicePublicPort})
+	viper.SetDefault("mongodb",
+		mongodb{
+			Host:            "localhost:27017",
+			DB:              _mongodbDB,
+			Timeout:         _mongodbTimeout,
+			MaxConnIdleTime: _mongodbMaxConnIdleTime,
+			MinPoolSize:     _mongodbMinPoolSize,
+			MaxPoolSize:     _mongodbMaxPoolSize,
+			MaxConnecting:   _mongodbMaxConnecting,
+		},
+	)
+}
+
 // Config is the api-demo configuration structure
 type Config struct {
 	AppName  string  `mapstructure:"app_name"`
@@ -56,6 +86,7 @@ type server struct {
 
 type mongodb struct {
 	Host            string        `mapstructure:"host"`
+	DB              string        `mapstructure:"db"`
 	Username        string        `mapstructure:"username"`
 	Password        string        `mapstructure:"password"`
 	Timeout         time.Duration `mapstructure:"timeout"`
@@ -68,6 +99,29 @@ type mongodb struct {
 // GetPublicPort get the public port that api-demo service is listening at
 func (s *server) GetPublicPort() string {
 	return s.PublicPort
+}
+
+// InjectTestConfig inject a config for internal unit test
+func InjectTestConfig(config Config) {
+	env, exists := os.LookupEnv(EnvUnitTest)
+	if !exists {
+		slog.Warn("can't find environment variable",
+			slog.String("env", EnvUnitTest))
+
+		return
+	}
+
+	if b, err := strconv.ParseBool(env); !b || err != nil {
+		slog.Warn("isn't unit test env or can't parse bool value",
+			slog.Bool("unit_test_flag", b),
+			slog.Any("err", err))
+
+		return
+	}
+
+	slog.Debug("inject unit test config")
+
+	_config.Store(config)
 }
 
 // InitConfig initialization the service's global configuration

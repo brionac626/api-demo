@@ -2,6 +2,7 @@ package config
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -37,6 +38,46 @@ func TestInitConfig(t *testing.T) {
 }
 
 func TestGetConfig(t *testing.T) {
+	defaultConfig := Config{
+		AppName:  _serviceName,
+		Env:      "local",
+		LogLevel: _serviceLogLevel,
+		APIKey:   _serviceAPIKey,
+		Server: server{
+			PublicPort: _servicePublicPort,
+		},
+		MongoDB: mongodb{
+			Host:            "localhost:27017",
+			DB:              _mongodbDB,
+			Timeout:         _mongodbTimeout,
+			MaxConnIdleTime: _mongodbMaxConnIdleTime,
+			MinPoolSize:     _mongodbMinPoolSize,
+			MaxPoolSize:     _mongodbMaxPoolSize,
+			MaxConnecting:   _mongodbMaxConnecting,
+		},
+	}
+
+	testConfig := Config{
+		AppName:  "api-demo",
+		Env:      "unit-test",
+		LogLevel: "debug",
+		APIKey:   "test-api-key",
+		Server: server{
+			PublicPort: ":3000",
+		},
+		MongoDB: mongodb{
+			Host:            "test:27017",
+			DB:              "articles",
+			Username:        "test-user",
+			Password:        "test-user-password",
+			Timeout:         5 * time.Second,
+			MaxConnIdleTime: 1 * time.Minute,
+			MinPoolSize:     0,
+			MaxPoolSize:     20,
+			MaxConnecting:   2,
+		},
+	}
+
 	tests := []struct {
 		name  string
 		want  Config
@@ -44,29 +85,13 @@ func TestGetConfig(t *testing.T) {
 	}{
 		{
 			name: "default Config",
-			want: Config{
-				AppName:  "api-demo",
-				Env:      "local",
-				LogLevel: "debug",
-				APIKey:   "default-api-key",
-				Server: server{
-					PublicPort: ":3000",
-				},
-			},
+			want: defaultConfig,
 		},
 		{
 			name: "test Config",
-			want: Config{
-				AppName:  "api-demo",
-				Env:      "local",
-				LogLevel: "debug",
-				APIKey:   "test-api-key",
-				Server: server{
-					PublicPort: ":3000",
-				},
-			},
+			want: testConfig,
 			setup: func() {
-				InitConfig("../../deployment/test/Config.yaml")
+				InitConfig("../../deployment/test/config.yaml")
 			},
 		},
 	}
@@ -101,7 +126,7 @@ func TestUpdateConfig(t *testing.T) {
 			args: args{
 				newCfg: Config{
 					AppName:  "api-demo",
-					Env:      "local",
+					Env:      "unit-test",
 					LogLevel: "debug",
 					APIKey:   "test-api-key",
 					Server: server{
@@ -111,7 +136,7 @@ func TestUpdateConfig(t *testing.T) {
 			},
 			want: Config{
 				AppName:  "api-demo",
-				Env:      "local",
+				Env:      "unit-test",
 				LogLevel: "debug",
 				APIKey:   "test-api-key",
 				Server: server{
