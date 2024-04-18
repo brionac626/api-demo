@@ -1,0 +1,10 @@
+with-expecter: true
+mockname: "{{.InterfaceName}}Mock"
+filename: "mock_{{.PackageName}}.go"
+outpkg: "mocks"
+packages:
+  github.com/brionac626/api-demo/delivery/repository:
+    # place your package-specific config here
+    config:
+      all: true
+      dir: "{{.InterfaceDir}}/mocks"
