@@ -14,8 +14,9 @@ func InitMongoDBClient(ctx context.Context) (*mongo.Client, error) {
 
 	opts := options.Client().
 		SetAuth(options.Credential{
-			Username: cfg.MongoDB.Username,
-			Password: cfg.MongoDB.Password,
+			Username:   cfg.MongoDB.Username,
+			Password:   cfg.MongoDB.Password,
+			AuthSource: cfg.MongoDB.DB,
 		}).
 		SetMaxConnIdleTime(cfg.MongoDB.MaxConnIdleTime).
 		SetMinPoolSize(cfg.MongoDB.MinPoolSize).
