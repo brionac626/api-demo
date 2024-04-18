@@ -11,10 +11,10 @@ func NewServer(h ArticleHandler) *echo.Echo {
 	publicGroup := e.Group("/public")
 
 	// TODO: add articles handler
-	publicGroup.GET("/articles", h.getArticles)
-	publicGroup.POST("/articles", h.createArticles)
-	publicGroup.PUT("/articles/:id", h.modifyArticles)
-	publicGroup.DELETE("/articles/:id", h.deleteArticles)
+	publicGroup.GET("/articles/:author", h.getArticles)
+	publicGroup.POST("/articles/:author", h.createArticles)
+	publicGroup.PUT("/articles/:author/:id", h.modifyArticles)
+	publicGroup.DELETE("/articles/:author/:id", h.deleteArticles)
 
 	privateGroup := e.Group("/private")
 
