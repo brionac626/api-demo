@@ -6,13 +6,15 @@ type ErrorResp struct {
 }
 
 const (
-	_defaultPage      = 0
+	_defaultPage      = 1
 	_defaultPageLimit = 10
 )
 
 type GetArticlesReq struct {
-	Page  int `json:"page"`
-	Limit int `json:"limit"`
+	ID     *string `query:"id,omitempty"`
+	Author string  `param:"author"`
+	Page   int64   `query:"page"`
+	Limit  int64   `query:"limit"`
 }
 
 func (ga *GetArticlesReq) CheckPaginationValue() {
@@ -20,14 +22,14 @@ func (ga *GetArticlesReq) CheckPaginationValue() {
 		ga.Page = _defaultPage
 	}
 
-	if ga.Limit < 0 {
+	if ga.Limit <= 0 {
 		ga.Limit = _defaultPageLimit
 	}
 }
 
 type GetArticlesResp struct {
 	Articles []Article `json:"articles,omitempty"`
-	Total    int       `json:"total"`
+	Total    int64     `json:"total"`
 }
 
 type CreateArticlesReq struct {
