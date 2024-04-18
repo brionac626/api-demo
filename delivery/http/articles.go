@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/brionac626/api-demo/domains"
+	"github.com/brionac626/api-demo/delivery/repository"
 	"github.com/brionac626/api-demo/models"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,7 +13,7 @@ import (
 )
 
 type ArticleHandler struct {
-	Repo domains.ArticlesRepo
+	Repo repository.ArticlesRepo
 }
 
 func (ah *ArticleHandler) getArticles(c echo.Context) error {

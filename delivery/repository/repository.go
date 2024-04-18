@@ -1,4 +1,4 @@
-package domains
+package repository
 
 import (
 	"context"
