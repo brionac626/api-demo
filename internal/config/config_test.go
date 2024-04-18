@@ -43,10 +43,10 @@ func TestGetConfig(t *testing.T) {
 		Env:      "local",
 		LogLevel: _serviceLogLevel,
 		APIKey:   _serviceAPIKey,
-		Server: server{
+		Server: Server{
 			PublicPort: _servicePublicPort,
 		},
-		MongoDB: mongodb{
+		MongoDB: Mongodb{
 			Host:            "localhost:27017",
 			DB:              _mongodbDB,
 			Timeout:         _mongodbTimeout,
@@ -62,10 +62,10 @@ func TestGetConfig(t *testing.T) {
 		Env:      "unit-test",
 		LogLevel: "debug",
 		APIKey:   "test-api-key",
-		Server: server{
+		Server: Server{
 			PublicPort: ":3000",
 		},
-		MongoDB: mongodb{
+		MongoDB: Mongodb{
 			Host:            "test:27017",
 			DB:              "articles",
 			Username:        "test-user",
@@ -129,7 +129,7 @@ func TestUpdateConfig(t *testing.T) {
 					Env:      "unit-test",
 					LogLevel: "debug",
 					APIKey:   "test-api-key",
-					Server: server{
+					Server: Server{
 						PublicPort: ":3000",
 					},
 				},
@@ -139,7 +139,7 @@ func TestUpdateConfig(t *testing.T) {
 				Env:      "unit-test",
 				LogLevel: "debug",
 				APIKey:   "test-api-key",
-				Server: server{
+				Server: Server{
 					PublicPort: ":3000",
 				},
 			},

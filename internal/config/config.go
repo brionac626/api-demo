@@ -55,9 +55,9 @@ func init() {
 	viper.SetDefault("env", "local")
 	viper.SetDefault("log_level", _serviceLogLevel)
 	viper.SetDefault("api_key", _serviceAPIKey)
-	viper.SetDefault("server", server{PublicPort: _servicePublicPort})
+	viper.SetDefault("server", Server{PublicPort: _servicePublicPort})
 	viper.SetDefault("mongodb",
-		mongodb{
+		Mongodb{
 			Host:            "localhost:27017",
 			DB:              _mongodbDB,
 			Timeout:         _mongodbTimeout,
@@ -75,18 +75,19 @@ type Config struct {
 	Env      string  `mapstructure:"env"`
 	LogLevel string  `mapstructure:"log_level"`
 	APIKey   string  `mapstructure:"api_key"`
-	Server   server  `mapstructure:"server"`
-	MongoDB  mongodb `mapstructure:"mongodb"`
+	Server   Server  `mapstructure:"server"`
+	MongoDB  Mongodb `mapstructure:"mongodb"`
 }
 
 // server is the server configuration structure for start the api-demo http service
-type server struct {
+type Server struct {
 	PublicPort string `mapstructure:"public_port"`
 }
 
-type mongodb struct {
+type Mongodb struct {
 	Host            string        `mapstructure:"host"`
 	DB              string        `mapstructure:"db"`
+	Collection      string        `mapstructure:"collection"`
 	Username        string        `mapstructure:"username"`
 	Password        string        `mapstructure:"password"`
 	Timeout         time.Duration `mapstructure:"timeout"`
@@ -97,7 +98,7 @@ type mongodb struct {
 }
 
 // GetPublicPort get the public port that api-demo service is listening at
-func (s *server) GetPublicPort() string {
+func (s *Server) GetPublicPort() string {
 	return s.PublicPort
 }
 
