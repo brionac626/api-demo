@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 
 	"github.com/brionac626/api-demo/internal/config"
 	"github.com/brionac626/api-demo/models"
@@ -12,27 +13,28 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var _ ArticlesRepo = (*articleRepo)(nil)
+var _ ArticlesRepo = (*articlesRepo)(nil)
 
-type articleRepo struct {
+type articlesRepo struct {
 	mgoDB      *mongo.Database
 	collection string
 }
 
 // NewArticleRepo create a new article repository instance
 func NewArticleRepo(mongoDBClient *mongo.Client) ArticlesRepo {
-	return &articleRepo{
+	return &articlesRepo{
 		mgoDB:      mongoDBClient.Database(config.GetConfig().MongoDB.DB),
 		collection: config.GetConfig().MongoDB.Collection,
 	}
 }
 
-func (ar *articleRepo) FindAllArticles(ctx context.Context, author string, page, limit int64) ([]models.Article, int64, error) {
+func (ar *articlesRepo) FindAllArticles(ctx context.Context, author string, page, limit int64) ([]models.Article, int64, error) {
 	invalidCount := int64(-1)
 	filter := bson.D{{Key: "author", Value: author}}
 
 	counts, err := ar.mgoDB.Collection(ar.collection).CountDocuments(ctx, filter)
 	if err != nil {
+		log.Println("count err", err)
 		return nil, invalidCount, err
 	}
 
@@ -42,18 +44,20 @@ func (ar *articleRepo) FindAllArticles(ctx context.Context, author string, page,
 		options.Find().SetSkip((page-1)*limit-1).SetLimit(limit).SetSort(bson.D{{Key: "created_at", Value: -1}}),
 	)
 	if err != nil {
+		log.Println("find err", err)
 		return nil, invalidCount, err
 	}
 
 	var result []models.Article
 	if err := cur.All(ctx, &result); err != nil {
+		log.Println("all err", err)
 		return nil, invalidCount, err
 	}
 
 	return result, counts, nil
 }
 
-func (ar *articleRepo) FindArticle(ctx context.Context, id string) (*models.Article, error) {
+func (ar *articlesRepo) FindArticle(ctx context.Context, id string) (*models.Article, error) {
 	articleID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
@@ -71,7 +75,7 @@ func (ar *articleRepo) FindArticle(ctx context.Context, id string) (*models.Arti
 	return &result, nil
 }
 
-func (ar *articleRepo) InsertNewArticle(ctx context.Context, article models.Article) error {
+func (ar *articlesRepo) InsertNewArticle(ctx context.Context, article models.Article) error {
 	_, err := ar.mgoDB.Collection(ar.collection).InsertOne(ctx, article)
 	if err != nil {
 		return err
@@ -80,7 +84,7 @@ func (ar *articleRepo) InsertNewArticle(ctx context.Context, article models.Arti
 	return nil
 }
 
-func (ar *articleRepo) UpdateArticle(ctx context.Context, article models.Article) error {
+func (ar *articlesRepo) UpdateArticle(ctx context.Context, article models.Article) error {
 	update := bson.D{
 		{Key: "title", Value: article.Title},
 		{Key: "title", Value: article.Content},
@@ -94,7 +98,7 @@ func (ar *articleRepo) UpdateArticle(ctx context.Context, article models.Article
 	return nil
 }
 
-func (ar *articleRepo) DeleteArticle(ctx context.Context, id string) error {
+func (ar *articlesRepo) DeleteArticle(ctx context.Context, id string) error {
 	articleID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
