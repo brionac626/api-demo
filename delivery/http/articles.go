@@ -9,6 +9,7 @@ import (
 	"github.com/brionac626/api-demo/models"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ArticleHandler struct {
@@ -19,6 +20,8 @@ func (ah *ArticleHandler) getArticles(c echo.Context) error {
 	// get the list of articles from mongodb
 	// order by last updated time
 	// pagination, 10 per page
+	ctx := c.Request().Context()
+
 	var req models.GetArticlesReq
 	if err := c.Bind(&req); err != nil {
 		c.JSON(
@@ -29,11 +32,32 @@ func (ah *ArticleHandler) getArticles(c echo.Context) error {
 		return err
 	}
 
+	// find only one article
+	if req.ID != nil {
+		article, err := ah.Repo.FindArticle(ctx, *req.ID)
+		if err != nil {
+			if errors.Is(err, mongo.ErrNoDocuments) {
+				c.JSON(
+					http.StatusNotFound,
+					&models.ErrorResp{Message: "can't find the article"},
+				)
+			} else {
+				c.JSON(
+					http.StatusInternalServerError,
+					&models.ErrorResp{Message: "find article failed"},
+				)
+			}
+
+			return err
+		}
+
+		return c.JSON(http.StatusOK, &article)
+	}
+
+	// find all articles per page
 	req.CheckPaginationValue()
 
-	ctx := c.Request().Context()
-
-	articles, total, err := ah.Repo.FindAllArticles(ctx, req.Page, req.Limit)
+	articles, total, err := ah.Repo.FindAllArticles(ctx, req.Author, req.Page, req.Limit)
 	if err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
@@ -92,6 +116,7 @@ func (ah *ArticleHandler) createArticles(c echo.Context) error {
 func (ah *ArticleHandler) modifyArticles(c echo.Context) error {
 	// modify the article's content
 	// update the article's properties on mongodb
+	// only the author and update the user's article
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
