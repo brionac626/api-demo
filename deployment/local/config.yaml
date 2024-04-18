@@ -7,8 +7,9 @@ server:
 mongodb:
   host: localhost:27017
   db: articles
-  username: local-user
-  password: local-user-password
+  collection: articles
+  username: articles-repo
+  password: repo-password
   timeout: 5s
   max_conn_idle_time: 1m
   min_pool_size: 0
