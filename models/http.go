@@ -39,6 +39,8 @@ type CreateArticlesReq struct {
 }
 
 type ModifyArticlesReq struct {
+	ID      string `param:"id" json:"-"`
+	Author  string `param:"author" json:"-"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }

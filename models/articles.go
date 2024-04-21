@@ -23,6 +23,17 @@ func (a *Article) InitArticle() {
 	a.UpdatedAt = primitive.NewDateTimeFromTime(t)
 }
 
+func (a *Article) ConvertArticleID(id string) error {
+	articleID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	a.ID = articleID
+
+	return nil
+}
+
 // GenerateUpdatedAtTime generates the updated timestamp for the article
 func (a *Article) GenerateUpdatedAtTime() {
 	a.UpdatedAt = primitive.NewDateTimeFromTime(time.Now().UTC())

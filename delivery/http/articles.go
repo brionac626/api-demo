@@ -4,13 +4,10 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/brionac626/api-demo/delivery/repository"
 	"github.com/brionac626/api-demo/models"
 	"github.com/labstack/echo/v4"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ArticleHandler struct {
@@ -123,26 +120,6 @@ func (ah *ArticleHandler) modifyArticles(c echo.Context) error {
 	// only the author and update the user's article
 	ctx := c.Request().Context()
 
-	id := c.Param("id")
-	if id == "" {
-		c.JSON(
-			http.StatusBadRequest,
-			&models.ErrorResp{Message: "can't get article id"},
-		)
-
-		return errors.New("can't get article id")
-	}
-
-	articleID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		c.JSON(
-			http.StatusBadRequest,
-			&models.ErrorResp{Message: "failed to parse article id"},
-		)
-
-		return err
-	}
-
 	var req models.ModifyArticlesReq
 	if err := c.Bind(&req); err != nil {
 		c.JSON(
@@ -153,14 +130,13 @@ func (ah *ArticleHandler) modifyArticles(c echo.Context) error {
 		return err
 	}
 
-	articleUpdatedAt := time.Now().UnixNano()
-
 	article := models.Article{
-		ID:        articleID,
-		Title:     req.Title,
-		Content:   req.Content,
-		UpdatedAt: primitive.DateTime(articleUpdatedAt),
+		Title:   req.Title,
+		Content: req.Content,
 	}
+
+	article.ConvertArticleID(req.ID)
+	article.GenerateUpdatedAtTime()
 
 	if err := ah.repo.UpdateArticle(ctx, article); err != nil {
 		c.JSON(
