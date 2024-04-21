@@ -367,3 +367,76 @@ func TestArticleHandler_modifyArticles(t *testing.T) {
 		})
 	}
 }
+
+func TestArticleHandler_deleteArticles(t *testing.T) {
+	repoMock := mocks.NewArticlesRepoMock(t)
+	h := NewArticleHandler(repoMock)
+
+	e := echo.New()
+	gp := e.Group("/public")
+	gp.DELETE("/articles/:author/:id", h.deleteArticles)
+
+	testAuthor := "testAuthor"
+	testArticleID := "123"
+
+	type args struct {
+		req *http.Request
+		rec *httptest.ResponseRecorder
+	}
+	tests := []struct {
+		name               string
+		args               args
+		mockSetup          func()
+		expectedStatusCode int
+		expectedErrResp    models.ErrorResp
+		wantErr            bool
+	}{
+		{
+			name: "delete-1-article",
+			args: args{
+				req: httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/public/articles/%s/%s", testAuthor, testArticleID), nil),
+				rec: httptest.NewRecorder(),
+			},
+			mockSetup: func() {
+				repoMock.EXPECT().DeleteArticle(context.Background(), testArticleID).Return(nil).Once()
+			},
+			expectedStatusCode: http.StatusNoContent,
+			wantErr:            false,
+		},
+		// TODO: add bad request test case
+		{
+			name: "failed-delete-1-article-internal-error",
+			args: args{
+				req: httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/public/articles/%s/%s", testAuthor, testArticleID), nil),
+				rec: httptest.NewRecorder(),
+			},
+			mockSetup: func() {
+				repoMock.EXPECT().DeleteArticle(context.Background(), testArticleID).Return(errors.New("internal error")).Once()
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			expectedErrResp:    models.ErrorResp{Message: "failed to delete article"},
+			wantErr:            true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mockSetup != nil {
+				tt.mockSetup()
+			}
+
+			e.ServeHTTP(tt.args.rec, tt.args.req)
+
+			assert.Equal(t, tt.expectedStatusCode, tt.args.rec.Result().StatusCode)
+			if tt.wantErr {
+				body, err := io.ReadAll(tt.args.rec.Body)
+				assert.NoError(t, err)
+
+				var resp models.ErrorResp
+				err = json.Unmarshal(body, &resp)
+				assert.NoError(t, err)
+
+				assert.Equal(t, tt.expectedErrResp, resp)
+			}
+		})
+	}
+}

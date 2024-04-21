@@ -153,17 +153,19 @@ func (ah *ArticleHandler) deleteArticles(c echo.Context) error {
 	// hard delete the articles
 	ctx := c.Request().Context()
 
-	articleID := c.Param("id")
-	if articleID == "" {
+	var req models.DeleteArticlesReq
+	if err := c.Bind(&req); err != nil {
+		slog.Error("bind request error", slog.String("err", err.Error()))
 		c.JSON(
 			http.StatusBadRequest,
-			&models.ErrorResp{Message: "can't get article id"},
+			&models.ErrorResp{Message: "failed to bind request"},
 		)
 
-		return errors.New("can't get article id")
+		return err
 	}
 
-	if err := ah.repo.DeleteArticle(ctx, articleID); err != nil {
+	if err := ah.repo.DeleteArticle(ctx, req.ID); err != nil {
+		slog.Error("delete article error", slog.String("err", err.Error()))
 		c.JSON(
 			http.StatusInternalServerError,
 			&models.ErrorResp{Message: "failed to delete article"},

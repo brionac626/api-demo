@@ -44,3 +44,8 @@ type ModifyArticlesReq struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }
+
+type DeleteArticlesReq struct {
+	ID     string `param:"id" json:"-"`
+	Author string `param:"author" json:"-"`
+}
