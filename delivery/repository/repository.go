@@ -2,8 +2,14 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/brionac626/api-demo/models"
+)
+
+var (
+	// ErrNoArticle is returned when the target article does not exist
+	ErrNoArticle = errors.New("no article")
 )
 
 // ArticlesRepo a repository for articles operations
