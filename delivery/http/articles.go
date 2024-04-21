@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -87,6 +88,7 @@ func (ah *ArticleHandler) createArticles(c echo.Context) error {
 
 	var req models.CreateArticlesReq
 	if err := c.Bind(&req); err != nil {
+		slog.Error("bind request error", slog.String("err", err.Error()))
 		c.JSON(
 			http.StatusBadRequest,
 			&models.ErrorResp{Message: "failed to bind request"},
@@ -95,19 +97,17 @@ func (ah *ArticleHandler) createArticles(c echo.Context) error {
 		return err
 	}
 
-	articleCreatedAt := time.Now().UnixNano()
-
 	newArticle := models.Article{
-		Author:    "get-it-from-context",
-		Title:     req.Title,
-		CreatedAt: primitive.DateTime(articleCreatedAt),
-		UpdatedAt: primitive.DateTime(articleCreatedAt),
-		Content:   req.Content,
+		Author:  req.Author,
+		Title:   req.Title,
+		Content: req.Content,
 	}
+
+	newArticle.InitArticle()
 
 	if err := ah.repo.InsertNewArticle(ctx, newArticle); err != nil {
 		c.JSON(
-			http.StatusBadRequest,
+			http.StatusInternalServerError,
 			&models.ErrorResp{Message: "insert new article error"},
 		)
 

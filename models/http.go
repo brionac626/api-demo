@@ -33,6 +33,7 @@ type GetArticlesResp struct {
 }
 
 type CreateArticlesReq struct {
+	Author  string `param:"author" json:"-"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }

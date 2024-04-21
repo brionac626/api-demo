@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -16,6 +17,7 @@ import (
 	"github.com/brionac626/api-demo/models"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -187,6 +189,99 @@ func TestArticleHandler_getArticles(t *testing.T) {
 				assert.Equal(t, tt.expectedResp.(models.GetArticlesResp), got)
 			}
 
+		})
+	}
+}
+
+func TestArticleHandler_createArticles(t *testing.T) {
+	repoMock := mocks.NewArticlesRepoMock(t)
+	h := NewArticleHandler(repoMock)
+
+	e := echo.New()
+	gp := e.Group("/public")
+	gp.POST("/articles/:author", h.createArticles)
+
+	testAuthor := "testAuthor"
+	reqBody, err := json.Marshal(&models.CreateArticlesReq{
+		Title:   "new-title",
+		Content: "new-content",
+	})
+	assert.NoError(t, err)
+
+	type args struct {
+		rec *httptest.ResponseRecorder
+	}
+	tests := []struct {
+		name               string
+		args               args
+		mockSetup          func() *http.Request
+		expectedStatusCode int
+		expectedErrResp    models.ErrorResp
+		wantErr            bool
+	}{
+		{
+			name: "post-1-new-article",
+			args: args{
+				rec: httptest.NewRecorder(),
+			},
+			mockSetup: func() *http.Request {
+				repoMock.EXPECT().InsertNewArticle(context.Background(), mock.AnythingOfType("models.Article")).Return(nil).Once()
+
+				req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/public/articles/%s", testAuthor), bytes.NewBuffer(reqBody))
+				req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+				return req
+			},
+			expectedStatusCode: http.StatusNoContent,
+			wantErr:            false,
+		},
+		{
+			name: "failed-bad-request",
+			args: args{
+				rec: httptest.NewRecorder(),
+			},
+			mockSetup: func() *http.Request {
+				return httptest.NewRequest(http.MethodPost, fmt.Sprintf("/public/articles/%s", testAuthor), bytes.NewBuffer(reqBody))
+			},
+			expectedStatusCode: http.StatusBadRequest,
+			expectedErrResp:    models.ErrorResp{Message: "failed to bind request"},
+			wantErr:            true,
+		},
+		{
+			name: "failed-post-1-new-article-internal-error",
+			args: args{
+				rec: httptest.NewRecorder(),
+			},
+			mockSetup: func() *http.Request {
+				repoMock.EXPECT().InsertNewArticle(context.Background(), mock.AnythingOfType("models.Article")).Return(errors.New("internal error")).Once()
+
+				req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/public/articles/%s", testAuthor), bytes.NewBuffer(reqBody))
+				req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+				return req
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			expectedErrResp:    models.ErrorResp{Message: "insert new article error"},
+			wantErr:            true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := tt.mockSetup()
+
+			e.ServeHTTP(tt.args.rec, req)
+
+			assert.Equal(t, tt.expectedStatusCode, tt.args.rec.Result().StatusCode)
+			if tt.wantErr {
+				body, err := io.ReadAll(tt.args.rec.Body)
+				assert.NoError(t, err)
+
+				var resp models.ErrorResp
+				err = json.Unmarshal(body, &resp)
+				assert.NoError(t, err)
+
+				assert.Equal(t, tt.expectedErrResp, resp)
+			}
 		})
 	}
 }
