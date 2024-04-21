@@ -3,7 +3,7 @@ package http
 import "github.com/labstack/echo/v4"
 
 // NewServer return a new echo server for public service
-func NewServer(h ArticleHandler) *echo.Echo {
+func NewServer(h *ArticleHandler) *echo.Echo {
 	e := echo.New()
 
 	// TODO: add trace

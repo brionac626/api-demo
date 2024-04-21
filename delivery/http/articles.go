@@ -8,12 +8,16 @@ import (
 	"github.com/brionac626/api-demo/delivery/repository"
 	"github.com/brionac626/api-demo/models"
 	"github.com/labstack/echo/v4"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ArticleHandler struct {
-	Repo repository.ArticlesRepo
+	repo repository.ArticlesRepo
+}
+
+func NewArticleHandler(repo repository.ArticlesRepo) *ArticleHandler {
+	return &ArticleHandler{repo: repo}
 }
 
 func (ah *ArticleHandler) getArticles(c echo.Context) error {
@@ -33,10 +37,10 @@ func (ah *ArticleHandler) getArticles(c echo.Context) error {
 	}
 
 	// find only one article
-	if req.ID != nil {
-		article, err := ah.Repo.FindArticle(ctx, *req.ID)
+	if req.ID != "" {
+		article, err := ah.repo.FindArticle(ctx, req.ID)
 		if err != nil {
-			if errors.Is(err, mongo.ErrNoDocuments) {
+			if errors.Is(err, repository.ErrNoArticle) {
 				c.JSON(
 					http.StatusNotFound,
 					&models.ErrorResp{Message: "can't find the article"},
@@ -51,13 +55,13 @@ func (ah *ArticleHandler) getArticles(c echo.Context) error {
 			return err
 		}
 
-		return c.JSON(http.StatusOK, &article)
+		return c.JSON(http.StatusOK, &models.GetArticlesResp{Articles: []models.Article{*article}, Total: 1})
 	}
 
 	// find all articles per page
 	req.CheckPaginationValue()
 
-	articles, total, err := ah.Repo.FindAllArticles(ctx, req.Author, req.Page, req.Limit)
+	articles, total, err := ah.repo.FindAllArticles(ctx, req.Author, req.Page, req.Limit)
 	if err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
@@ -101,7 +105,7 @@ func (ah *ArticleHandler) createArticles(c echo.Context) error {
 		Content:   req.Content,
 	}
 
-	if err := ah.Repo.InsertNewArticle(ctx, newArticle); err != nil {
+	if err := ah.repo.InsertNewArticle(ctx, newArticle); err != nil {
 		c.JSON(
 			http.StatusBadRequest,
 			&models.ErrorResp{Message: "insert new article error"},
@@ -158,7 +162,7 @@ func (ah *ArticleHandler) modifyArticles(c echo.Context) error {
 		UpdatedAt: primitive.DateTime(articleUpdatedAt),
 	}
 
-	if err := ah.Repo.UpdateArticle(ctx, article); err != nil {
+	if err := ah.repo.UpdateArticle(ctx, article); err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
 			&models.ErrorResp{Message: "failed to update article"},
@@ -183,7 +187,7 @@ func (ah *ArticleHandler) deleteArticles(c echo.Context) error {
 		return errors.New("can't get article id")
 	}
 
-	if err := ah.Repo.DeleteArticle(ctx, articleID); err != nil {
+	if err := ah.repo.DeleteArticle(ctx, articleID); err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
 			&models.ErrorResp{Message: "failed to delete article"},
