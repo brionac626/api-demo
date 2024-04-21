@@ -11,10 +11,10 @@ const (
 )
 
 type GetArticlesReq struct {
-	ID     *string `query:"id,omitempty"`
-	Author string  `param:"author"`
-	Page   int64   `query:"page"`
-	Limit  int64   `query:"limit"`
+	ID     string `query:"id"`
+	Author string `param:"author"`
+	Page   int64  `query:"page"`
+	Limit  int64  `query:"limit"`
 }
 
 func (ga *GetArticlesReq) CheckPaginationValue() {
