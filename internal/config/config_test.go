@@ -1,41 +1,12 @@
 package config
 
 import (
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestInitConfig(t *testing.T) {
-	type args struct {
-		path string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "test Config",
-			args: args{
-				path: "../../deployment/test/Config.yaml",
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := InitConfig(tt.args.path); (err != nil) != tt.wantErr {
-				t.Errorf("InitConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			Config := _config.Load().(Config)
-			t.Logf("Config %+v", Config)
-		})
-	}
-}
 
 func TestGetConfig(t *testing.T) {
 	defaultConfig := Config{
@@ -183,4 +154,35 @@ func TestReloadConfig(t *testing.T) {
 			t.Logf("Config %+v", Config)
 		})
 	}
+}
+
+func TestInitConfig(t *testing.T) {
+	type args struct {
+		path string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "test Config",
+			args: args{
+				path: "../../deployment/test/Config.yaml",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := InitConfig(tt.args.path); (err != nil) != tt.wantErr {
+				t.Errorf("InitConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			Config := _config.Load().(Config)
+			t.Logf("Config %+v", Config)
+		})
+	}
+	_config = atomic.Value{}
 }
