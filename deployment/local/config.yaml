@@ -5,7 +5,7 @@ api_key: test-api-key
 server:
   public_port: :3000
 mongodb:
-  host: localhost:27017
+  host: mongodb://localhost:27017
   db: articles
   collection: articles
   username: articles-repo
